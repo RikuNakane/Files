@@ -1,0 +1,555 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+<nta>
+	<declaration>chan trig,chk;
+int Top_dt = 0;
+int Low_dt = 0;
+const int Top_Interval = 0;
+const int Low_Interval = 1000;
+const int Top_Range = 0;
+const int Low_Range = 3000;
+const int Top_Sampling = 1;
+const int Low_Sampling = 0;
+const int Event = 1;
+const int NoEvent = 0;
+const int TOP = 0;
+const int LOW = 1;
+const int LOWLOW = 2;
+int Top_Reg1;
+int Low_Reg1;
+int Top_Reg2;
+int Low_Reg2;
+int Top_Reg3;
+int Low_Reg3;
+bool BoolReg1;
+bool BoolReg2;
+bool BoolReg3;
+
+
+int Top_St1temp0 = 22;
+int Low_St1temp0 = 0;
+int Top_Nonamefunc0temp;
+int Low_Nonamefunc0temp;
+int Top_St1Ths1temp0;
+int Low_St1Ths1temp0;
+int Top_Ths1input;
+int Low_Ths1input;
+int Top_Ths1temp;
+int Low_Ths1temp;
+int Top_St1Ths11Offtemp0;
+int Low_St1Ths11Offtemp0;
+int Top_Offinput;
+int Low_Offinput;
+int Top_St1Ths11Off1integral;
+int Top_St1Ths11Off1integral_input;
+int Top_St1Ths11Off1integral_inputPRE;
+int Top_Offtempsqm;
+int Low_St1Ths11Off1integral;
+int Low_St1Ths11Off1integral_input;
+int Low_St1Ths11Off1integral_inputPRE;
+int Low_Offtempsqm;
+int Top_Offtemp;
+int Low_Offtemp;
+int St1Ths12edge_input;
+int St1Ths12edge_inputPRE;
+int Ths1ev0;
+int Top_St2temp0;
+int Low_St2temp0;
+int Top_Nonamefunc1temp;
+int Low_Nonamefunc1temp;
+int Top_St2Ths2temp0;
+int Low_St2Ths2temp0;
+int Top_Ths2input;
+int Low_Ths2input;
+int Top_Ths2temp;
+int Low_Ths2temp;
+int Top_St2Ths21Ontemp0;
+int Low_St2Ths21Ontemp0;
+int Top_Oninput;
+int Low_Oninput;
+int Top_St2Ths21On1integral;
+int Top_St2Ths21On1integral_input;
+int Top_St2Ths21On1integral_inputPRE;
+int Top_Ontempsqm;
+int Low_St2Ths21On1integral;
+int Low_St2Ths21On1integral_input;
+int Low_St2Ths21On1integral_inputPRE;
+int Low_Ontempsqm;
+int Top_Ontemp;
+int Low_Ontemp;
+int St2Ths22edge_input;
+int St2Ths22edge_inputPRE;
+int Ths2ev0;
+int Top_St1Output1;
+int Low_St1Output1;
+int Top_St2Output1;
+int Low_St2Output1;
+
+int Top_Output1;
+int Low_Output1;
+
+
+
+int power(int x,int n){
+  int num=1,i;
+  for(i=0;i&lt;n;i++) num = num * x;
+  return num;
+}
+
+int positive(int top,int low){
+if(top &lt; 0 || (top == 0 &amp;&amp; low &lt; 0)) return 0;
+else return 1;
+}
+
+int IncNum(int top,int low){
+  if(top &lt; 0 &amp;&amp; low &gt; 0) return (low/10000) + 1;
+  else if(top &gt; 0 &amp;&amp; low &lt; 0) return (low/10000) - 1;
+  else return low/10000;
+}
+
+int add(int top1,int low1,int top2,int low2,int class){
+  int top,low,inc;
+  top = top1 + top2;
+  low = low1 + low2;
+  inc = IncNum(top,low);
+  if(class == TOP) return top + inc;
+  else return low - inc*10000;
+} 
+
+int sub(int top1,int low1,int top2,int low2,int class){
+  int top,low,inc;
+  top = top1 - top2;
+  low = low1 - low2;
+  inc = IncNum(top,low);
+  if(class == TOP) return top + inc;
+  else return low - inc*10000;
+} 
+
+int addsub3(int top1,int low1,int lowlow1,int top2,int low2,int lowlow2,int class){
+  int top,low,lowlow,inc;
+  lowlow = add(low1,lowlow1,low2,lowlow2,LOW);
+  low = add(low1,lowlow1,low2,lowlow2,TOP);
+  top = top1+top2;
+  inc = IncNum(top,low);
+  if(class == TOP) return top + inc;
+  else if(class == LOW) return low - inc*10000;
+  else return lowlow;
+}
+
+int mult(int top1,int low1,int top2,int low2,int class){
+  int t1=top1,t2=top2,l1=low1,l2=low2;
+  int num1[10],num2[10],i,j,num[20],answer=0,flag=1,t,n1,n2;
+  for(i=0;i&lt;20;i++) num[i]=0;
+  if(positive(top1,low1) &amp;&amp; !positive(top2,low2)){
+    t2 = -t2;
+    l2 = -l2;
+    flag = -1;
+  }
+  else if(!positive(top1,low1) &amp;&amp; positive(top2,low2)){
+    t1 = -t1;
+    l1 = -l1;
+    flag = -1;
+  }
+  else if(!positive(top1,low1) &amp;&amp; !positive(top2,low2)){
+    t1 = -t1;
+    t2 = -t2;
+    l1 = -l1;
+    l2 = -l2;
+  }
+  
+  for(i=0;i&lt;4;i++){
+    num1[i] = (l1/power(10,i))%10;
+    num2[i] = (l2/power(10,i))%10;
+    num1[i+4] = (t1/power(10,i))%10;
+    num2[i+4] = (t2/power(10,i))%10;
+  }
+
+  for(i=0;i&lt;8;i++){
+    for(j=0;j&lt;8;j++){
+      t = num1[i] * num2[j];
+      num[i+j] += t%10;
+      num[i+j+1] += t/10;
+    }
+  }
+  for(i=0;i&lt;15;i++){
+    num[i+1] += num[i]/10;
+    num[i] = num[i]%10;
+  }
+  if(class == LOW){
+    for(i=0;i&lt;4;i++){
+      answer += num[i+4] * power(10,i);
+    }
+  }
+  else{
+    for(i=0;i&lt;4;i++){
+      answer += num[i+8] * power(10,i);
+    }
+  }
+  return answer * flag;
+} 
+
+int div(int top1,int low1,int top2,int low2,int class){
+  int t1=top1,t2=top2,l1=low1,l2=low2,ll1=0,ll2=0;
+  int top=0,low=0,flag=1,i,j,t,l,ll;
+
+  if(positive(top1,low1) &amp;&amp; !positive(top2,low2)){
+    t2 = -t2;
+    l2 = -l2;
+    flag = -1;
+  }
+  else if(!positive(top1,low1) &amp;&amp; positive(top2,low2)){
+    t1 = -t1;
+    l1 = -l1;
+    flag = -1;
+  }
+  else if(!positive(top1,low1) &amp;&amp; !positive(top2,low2)){
+    t1 = -t1;
+    t2 = -t2;
+    l1 = -l1;
+    l2 = -l2;
+  }
+
+  for(i=0;t1 &gt; t2 || (t1==t2 &amp;&amp; l1&gt;=l2);i++){ 
+    top++;
+    t=addsub3(t1,l1,ll1,-t2,-l2,-ll2,TOP);
+    l=addsub3(t1,l1,ll1,-t2,-l2,-ll2,LOW);
+    ll=addsub3(t1,l1,ll1,-t2,-l2,-ll2,LOWLOW);
+    t1 = t;
+    l1 = l;
+    ll1 = ll;
+  }
+
+  for(i=0;i&lt;4;i++){
+    ll2 = ll2/10 + (l2%10)*1000;
+    l2 = l2/10 + (t2%10)*1000;
+    t2 = t2/10;
+    low=low*10;
+    if(t2 != 0 || l2 != 0){
+      for(j=0;t1 &gt; t2 || (t1==t2 &amp;&amp; l1&gt;=l2);j++){
+	low++;
+	t=addsub3(t1,l1,ll1,-t2,-l2,-ll2,TOP);
+	l=addsub3(t1,l1,ll1,-t2,-l2,-ll2,LOW);
+	ll=addsub3(t1,l1,ll1,-t2,-l2,-ll2,LOWLOW);
+	t1 = t;
+	l1 = l;
+	ll1 = ll;
+      } 
+    }
+  }
+  if(class == TOP) return top * flag;
+  else return low * flag;
+}
+
+bool compareL(int top1,int low1,int top2,int low2){
+  if(top1 &lt; top2) return true;
+  else if(top1 &gt; top2) return false;
+  else if(low1 &lt; low2) return true;
+  else return false;
+}
+
+bool comparR(int top1,int low1,int top2,int low2){
+  if(top1 &gt; top2) return true;
+  else if(top1 &lt; top2) return false;
+  else if(low1 &gt; low2) return true;
+  else return false;
+}
+
+bool compareEL(int top1,int low1,int top2,int low2){
+  if(top1 &lt; top2) return true;
+  else if(top1 &gt; top2) return false;
+  else if(low1 &lt;= low2) return true;
+  else return false;
+}
+
+bool compareER(int top1,int low1,int top2,int low2){
+  if(top1 &gt; top2) return true;
+  else if(top1 &lt; top2) return false;
+  else if(low1 &gt;= low2) return true;
+  else return false;
+}
+
+bool compareE(int top1,int low1,int top2,int low2){ return ((top1 == top2) &amp;&amp; (low1 == low2));}
+int AND(int left,int right){return left &amp;&amp; right;}int OR(int left,int right){return left || right;}int NOT(int bo){return !bo;}
+ </declaration>
+	<template>
+		<name>SwitchSignalFunction</name>
+		<location id="id0" x="0" y="0">
+		</location>
+		<location id="id1" x="0" y="100">
+			<committed/>
+		</location>
+		<location id="id2" x="200" y="0">
+			<committed/>
+		</location>
+		<location id="id3" x="400" y="0">
+			<committed/>
+		</location>
+		<location id="id4" x="400" y="100">
+			<committed/>
+		</location>
+		<location id="id5" x="600" y="0">
+			<committed/>
+		</location>
+		<location id="id6" x="600" y="100">
+			<name x="610" y="100">st1_switch</name>
+			<committed/>
+		</location>
+		<location id="id7" x="0" y="600">
+		</location>
+		<location id="id8" x="0" y="700">
+			<committed/>
+		</location>
+		<location id="id9" x="200" y="600">
+			<committed/>
+		</location>
+		<location id="id10" x="400" y="600">
+			<committed/>
+		</location>
+		<location id="id11" x="400" y="700">
+			<committed/>
+		</location>
+		<location id="id12" x="600" y="600">
+			<committed/>
+		</location>
+		<location id="id13" x="600" y="700">
+			<name x="610" y="700">st2_switch</name>
+			<committed/>
+		</location>
+		<init ref="id1"/>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id2"/>
+			<label kind="synchronisation" x="100" y="0">trig?</label>
+		</transition>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id0"/>
+			<label kind="synchronisation" x="100" y="-200">chk!</label>
+			<label kind="assignment" x="100" y="-300">Top_Output1 := Top_St1Output1,
+Low_Output1 := Low_St1Output1</label>
+			<nail x="600" y="-200"/>
+			<nail x="0" y="-200"/>
+		</transition>
+		<transition>
+			<source ref="id6"/>
+			<target ref="id1"/>
+			<nail x="600" y="300"/>
+			<nail x="0" y="300"/>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id2"/>
+			<label kind="assignment" x="0" y="0">Top_St1Ths1temp0 := Top_St1temp0,
+Low_St1Ths1temp0 := Low_St1temp0,
+Top_Ths1input := 0,
+Low_Ths1input := 0,
+Top_dt := 0,
+Low_dt := 0,
+Top_St1Ths11Offtemp0 := Top_St1Ths1temp0,
+Low_St1Ths11Offtemp0 := Low_St1Ths1temp0,
+Top_dt := 0,
+Low_dt := 0,
+Top_St1Ths11Off1integral := 0,
+Top_St1Ths11Off1integral_input := 0,
+Top_St1Ths11Off1integral_inputPRE := 0,
+Low_St1Ths11Off1integral := 0,
+Low_St1Ths11Off1integral_input := 0,
+Low_St1Ths11Off1integral_inputPRE := 0,
+St1Ths12edge_input := 1,
+St1Ths12edge_inputPRE := 1</label>
+		</transition>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id3"/>
+			<label kind="assignment" x="200" y="0">Top_Offinput := Top_Ths1input,
+Low_Offinput := Low_Ths1input,
+Top_St1Ths11Off1integral_input := 5,
+Low_St1Ths11Off1integral_input := 0,
+Top_Reg1 := Top_St1Ths11Off1integral,
+Low_Reg1 := Low_St1Ths11Off1integral,
+Top_Reg2 := mult(Top_St1Ths11Off1integral_inputPRE,Low_St1Ths11Off1integral_inputPRE,Top_dt,Low_dt,TOP),
+Low_Reg2 := mult(Top_St1Ths11Off1integral_inputPRE,Low_St1Ths11Off1integral_inputPRE,Top_dt,Low_dt,LOW),
+Top_St1Ths11Off1integral := add(Top_Reg1,Low_Reg1,Top_Reg2,Low_Reg2,TOP),
+Low_St1Ths11Off1integral := add(Top_Reg1,Low_Reg1,Top_Reg2,Low_Reg2,LOW),
+Top_Offtempsqm := Top_St1Ths11Off1integral,
+Low_Offtempsqm := Low_St1Ths11Off1integral,
+Top_St1Ths11Off1integral_inputPRE := Top_St1Ths11Off1integral_input,
+Low_St1Ths11Off1integral_inputPRE := Low_St1Ths11Off1integral_input,
+Top_Offtemp := add(Top_Offtempsqm,Low_Offtempsqm,Top_St1Ths11Offtemp0,Low_St1Ths11Offtemp0,TOP),
+Low_Offtemp := add(Top_Offtempsqm,Low_Offtempsqm,Top_St1Ths11Offtemp0,Low_St1Ths11Offtemp0,LOW),
+Top_Ths1temp := Top_Offtemp,
+Low_Ths1temp := Low_Offtemp,
+Top_Reg1 := Top_Ths1temp,
+Low_Reg1 := Low_Ths1temp,
+Top_Reg2 := 30,
+Low_Reg2 := 0,
+BoolReg3 := compareER(Top_Reg1,Low_Reg1,Top_Reg2,Low_Reg2),
+St1Ths12edge_input := BoolReg3,
+Ths1ev0 := St1Ths12edge_input and (not St1Ths12edge_inputPRE),
+St1Ths12edge_inputPRE := St1Ths12edge_input</label>
+		</transition>
+		<transition>
+			<source ref="id3"/>
+			<target ref="id4"/>
+			<label kind="guard" x="400" y="100">(Ths1ev0  !=  NoEvent)</label>
+			<label kind="assignment" x="400" y="150">Top_Nonamefunc0temp := Top_Ths1temp,
+Low_Nonamefunc0temp := Low_Ths1temp</label>
+			<nail x="400" y="50"/>
+		</transition>
+		<transition>
+			<source ref="id3"/>
+			<target ref="id5"/>
+			<label kind="guard" x="400" y="0">not(Ths1ev0  !=  NoEvent)</label>
+			<label kind="assignment" x="400" y="50">Top_St1Output1 := Top_Ths1temp,
+Low_St1Output1 := Low_Ths1temp</label>
+			<nail x="500" y="0"/>
+		</transition>
+		<transition>
+			<source ref="id4"/>
+			<target ref="id13"/>
+			<label kind="assignment" x="400" y="250">Top_St2temp0 := Top_Nonamefunc0temp,
+Low_St2temp0 := Low_Nonamefunc0temp</label>
+			<nail x="500" y="100"/>
+		</transition>
+		<transition>
+			<source ref="id7"/>
+			<target ref="id9"/>
+			<label kind="synchronisation" x="100" y="600">trig?</label>
+		</transition>
+		<transition>
+			<source ref="id12"/>
+			<target ref="id7"/>
+			<label kind="synchronisation" x="100" y="400">chk!</label>
+			<label kind="assignment" x="100" y="300">Top_Output1 := Top_St2Output1,
+Low_Output1 := Low_St2Output1</label>
+			<nail x="600" y="400"/>
+			<nail x="0" y="400"/>
+		</transition>
+		<transition>
+			<source ref="id13"/>
+			<target ref="id8"/>
+			<nail x="600" y="900"/>
+			<nail x="0" y="900"/>
+		</transition>
+		<transition>
+			<source ref="id8"/>
+			<target ref="id9"/>
+			<label kind="assignment" x="0" y="600">Top_St2Ths2temp0 := Top_St2temp0,
+Low_St2Ths2temp0 := Low_St2temp0,
+Top_Ths2input := 0,
+Low_Ths2input := 0,
+Top_dt := 0,
+Low_dt := 0,
+Top_St2Ths21Ontemp0 := Top_St2Ths2temp0,
+Low_St2Ths21Ontemp0 := Low_St2Ths2temp0,
+Top_dt := 0,
+Low_dt := 0,
+Top_St2Ths21On1integral := 0,
+Top_St2Ths21On1integral_input := 0,
+Top_St2Ths21On1integral_inputPRE := 0,
+Low_St2Ths21On1integral := 0,
+Low_St2Ths21On1integral_input := 0,
+Low_St2Ths21On1integral_inputPRE := 0,
+St2Ths22edge_input := 1,
+St2Ths22edge_inputPRE := 1</label>
+		</transition>
+		<transition>
+			<source ref="id9"/>
+			<target ref="id10"/>
+			<label kind="assignment" x="200" y="600">Top_Oninput := Top_Ths2input,
+Low_Oninput := Low_Ths2input,
+Top_St2Ths21On1integral_input := -3,
+Low_St2Ths21On1integral_input := 0,
+Top_Reg1 := Top_St2Ths21On1integral,
+Low_Reg1 := Low_St2Ths21On1integral,
+Top_Reg2 := mult(Top_St2Ths21On1integral_inputPRE,Low_St2Ths21On1integral_inputPRE,Top_dt,Low_dt,TOP),
+Low_Reg2 := mult(Top_St2Ths21On1integral_inputPRE,Low_St2Ths21On1integral_inputPRE,Top_dt,Low_dt,LOW),
+Top_St2Ths21On1integral := add(Top_Reg1,Low_Reg1,Top_Reg2,Low_Reg2,TOP),
+Low_St2Ths21On1integral := add(Top_Reg1,Low_Reg1,Top_Reg2,Low_Reg2,LOW),
+Top_Ontempsqm := Top_St2Ths21On1integral,
+Low_Ontempsqm := Low_St2Ths21On1integral,
+Top_St2Ths21On1integral_inputPRE := Top_St2Ths21On1integral_input,
+Low_St2Ths21On1integral_inputPRE := Low_St2Ths21On1integral_input,
+Top_Ontemp := add(Top_Ontempsqm,Low_Ontempsqm,Top_St2Ths21Ontemp0,Low_St2Ths21Ontemp0,TOP),
+Low_Ontemp := add(Top_Ontempsqm,Low_Ontempsqm,Top_St2Ths21Ontemp0,Low_St2Ths21Ontemp0,LOW),
+Top_Ths2temp := Top_Ontemp,
+Low_Ths2temp := Low_Ontemp,
+Top_Reg1 := Top_Ths2temp,
+Low_Reg1 := Low_Ths2temp,
+Top_Reg2 := 20,
+Low_Reg2 := 0,
+BoolReg3 := compareEL(Top_Reg1,Low_Reg1,Top_Reg2,Low_Reg2),
+St2Ths22edge_input := BoolReg3,
+Ths2ev0 := St2Ths22edge_input and (not St2Ths22edge_inputPRE),
+St2Ths22edge_inputPRE := St2Ths22edge_input</label>
+		</transition>
+		<transition>
+			<source ref="id10"/>
+			<target ref="id11"/>
+			<label kind="guard" x="400" y="700">(Ths2ev0  !=  NoEvent)</label>
+			<label kind="assignment" x="400" y="750">Top_Nonamefunc1temp := Top_Ths2temp,
+Low_Nonamefunc1temp := Low_Ths2temp</label>
+			<nail x="400" y="650"/>
+		</transition>
+		<transition>
+			<source ref="id10"/>
+			<target ref="id12"/>
+			<label kind="guard" x="400" y="600">not(Ths2ev0  !=  NoEvent)</label>
+			<label kind="assignment" x="400" y="650">Top_St2Output1 := Top_Ths2temp,
+Low_St2Output1 := Low_Ths2temp</label>
+			<nail x="500" y="600"/>
+		</transition>
+		<transition>
+			<source ref="id11"/>
+			<target ref="id6"/>
+			<label kind="assignment" x="400" y="850">Top_St1temp0 := Top_Nonamefunc1temp,
+Low_St1temp0 := Low_Nonamefunc1temp</label>
+			<nail x="500" y="700"/>
+		</transition>
+	</template>
+	<template>
+		<name>RT</name>
+		<location id="id14" x="170" y="0">
+			<committed/>
+		</location>
+		<location id="id15" x="0" y="0">
+		</location>
+		<init ref="id14"/>
+		<transition>
+			<source ref="id14"/>
+			<target ref="id15"/>
+			<label kind="synchronisation" x="85" y="45">chk?</label>
+			<label kind="assignment" x="85" y="55">Top_dt := 0,
+Low_dt := 0</label>
+			<nail x="85" y="40"/>
+		</transition>
+		<transition>
+			<source ref="id15"/>
+			<target ref="id14"/>
+			<label kind="guard" x="85" y="-45">compareER(Top_dt,Low_dt,sub(Top_Sampling,Low_Sampling,Top_Range,Low_Range,TOP),sub(Top_Sampling,Low_Sampling,Top_Range,Low_Range,LOW))</label>
+			<label kind="synchronisation" x="70" y="-55">trig!</label>
+			<nail x="85" y="-40"/>
+		</transition>
+		<transition>
+			<source ref="id15"/>
+			<target ref="id15"/>
+			<label kind="guard" x="-90" y="-80">compareL(Top_dt,Low_dt,add(Top_Sampling,Low_Sampling,Top_Range,Low_Range,TOP),add(Top_Sampling,Low_Sampling,Top_Range,Low_Range,LOW))</label>
+			<label kind="assignment" x="-90" y="-70">Top_Reg3 := Top_dt,
+Low_Reg3 := Low_dt,
+Top_dt := add(Top_Reg3,Low_Reg3,Top_Interval,Low_Interval,TOP),
+Low_dt := add(Top_Reg3,Low_Reg3,Top_Interval,Low_Interval,LOW)</label>
+			<nail x="-85" y="-50"/>
+			<nail x="-85" y="50"/>
+		</transition>
+	</template>
+	<system>
+system SwitchSignalFunction,RT;</system>
+	<queries>
+		<query>
+			<formula>A[](Top_Output1 &lt; 40 and Top_Output1 &gt; -10)
+			</formula>
+			<comment>
+			</comment>
+		</query>
+	</queries>
+</nta>
